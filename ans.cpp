@@ -166,6 +166,8 @@ int main() {
         // priority_queue<State> nextQueue;
         constexpr int BEAM_WIDTH = 4;
 
+        State bestState = queue.top();
+        bestState.print();
         int loop = 0;
         while(loop < BEAM_WIDTH) {
             if (queue.size() == 0) break;
