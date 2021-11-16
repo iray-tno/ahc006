@@ -55,8 +55,10 @@ struct State {
         }
 
         Score leastScore = 1000000;
-        Score leastFromPos = -1;
-        Score leastToPos = -1;
+        int leastFromPos = -1;
+        int leastToPos = -1;
+
+        int j = 0;
 
         for (int i = 0; i < choices; ++i) {
             double beforeScore = routes[i].diff(routes[i + 1]);
@@ -64,21 +66,28 @@ struct State {
 
             double incScore = afterScore - beforeScore;
 
-            for (int j = 0; j <= i; ++j) {
-                double tempIncScore = incScore;
-                if (i == j) {
-                    // 同じ位置に挿入する場合
-                    tempIncScore -= routes[i].diff(order.to);
-                    tempIncScore += routes[i].diff(order.from) + order.from.diff(order.to);
-                } else {
-                    tempIncScore += incScoreFrom[j];
-                }
+            // 同じ位置に挿入する場合
+            Score scoreWithSamePlace = incScore;
+            scoreWithSamePlace -= routes[i].diff(order.to);
+            scoreWithSamePlace += routes[i].diff(order.from) + order.from.diff(order.to);
 
-                if (leastFromPos == -1 || tempIncScore < leastScore) {
-                    leastScore = tempIncScore;
-                    leastFromPos = j;
-                    leastToPos = i;
-                }
+            if (leastFromPos == -1 || scoreWithSamePlace < leastScore) {
+                leastScore = scoreWithSamePlace;
+                leastFromPos = i;
+                leastToPos = i;
+            }
+
+            // しゃくとりによる最善をチェック
+            double tempIncScore = incScore + incScoreFrom[j];
+            if (leastFromPos == -1 || tempIncScore < leastScore) {
+                leastScore = tempIncScore;
+                leastFromPos = j;
+                leastToPos = i;
+            }
+
+            // しゃくとりのjを更新
+            if (incScoreFrom[i] < incScoreFrom[j]) {
+                j = i;
             }
         }
 
@@ -164,10 +173,10 @@ int main() {
         priority_queue<State> nextQueue;
         vector<Took> taboo;
         // priority_queue<State> nextQueue;
-        constexpr int BEAM_WIDTH = 4;
+        constexpr int BEAM_WIDTH = 5;
 
-        State bestState = queue.top();
-        bestState.print();
+        // State bestState = queue.top();
+        // bestState.print();
         int loop = 0;
         while(loop < BEAM_WIDTH) {
             if (queue.size() == 0) break;
